@@ -1,0 +1,68 @@
+name: Rust Build and Test
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build_and_test:
+    runs-on: bare-metal
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cargo Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      - name: Build Release
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Get the branch name
+        id: get-branch-name
+        run: echo ::set-output name=BRANCH_NAME::${GITHUB_REF#refs/heads/}
+
+      - name: Create Tag
+        id: create-tag
+        run: |
+          TAG="release-${GITHUB_REF#refs/heads/}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          git tag $TAG -f
+          git push origin $TAG -f
+
+      - name: Create or Update Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=$TAG
+          RELEASE_NAME="Release $TAG"
+          EXISTING_RELEASE=$(gh release view $TAG --json tagName -q .tagName || echo "")
+          if [[ "$EXISTING_RELEASE" == "$TAG" ]]; then
+            echo "Release $TAG already exists, updating..."
+            # gh release edit "$TAG" --title "$RELEASE_NAME" --notes "Automatically updated release."
+          else
+            echo "Creating new release $TAG..."
+            gh release create "$TAG" --title "$RELEASE_NAME" --notes "Automatically created release."
+          fi
+
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload $TAG ./target/release/server-stats --clobber

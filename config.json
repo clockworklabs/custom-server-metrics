@@ -1,7 +1,8 @@
 {
   "size": {
     "dirs": [
-      "/Users/drogus/code/clockwork/SpacetimeDB/"
+      "/Users/drogus/code/clockwork/SpacetimeDB/",
+      "/Users/drogus/code/clockwork/SpacetimeDBPrivate/"
     ]
   },
   "instance": "drogus-local",
