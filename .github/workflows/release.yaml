@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Check and update rustup
-        uses: clockworklabs/SpacetimeDB/.github/actions/ensure-rustup@master # rustup >= 1.29.2
+        uses: clockworklabs/SpacetimeDB/.github/actions/ensure-rustup@master
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
